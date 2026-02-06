@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,30 +6,59 @@
 
 <style>
 body {
-    margin: 0;
-    background: radial-gradient(circle at top, #ff9a9e, #fad0c4);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    text-align: center;
+  margin: 0;
+  background: linear-gradient(135deg,#ff9a9e,#fad0c4);
+  height: 100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  font-family: 'Segoe UI', sans-serif;
+  text-align:center;
+  overflow:hidden;
 }
 
 h1 {
-    font-size: 2.5em;
-    color: white;
+  font-size: 2.5em;
+  color: white;
+  margin-bottom: 20px;
 }
 
 button {
-    margin-top: 20px;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 25px;
-    background: #ff0080;
-    color: white;
-    font-size: 1em;
+  padding: 14px 25px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(45deg,#ff0080,#ff4da6);
+  color: white;
+  font-size: 1em;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+.message {
+  margin-top: 25px;
+  color: white;
+  font-size: 1.2em;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.firework {
+  position:absolute;
+  width:6px;
+  height:6px;
+  background:yellow;
+  border-radius:50%;
+  animation: explode 1s ease-out forwards;
+}
+
+@keyframes explode {
+  0% { transform: scale(1); opacity:1; }
+  100% { transform: scale(18); opacity:0; }
 }
 </style>
 </head>
@@ -39,11 +67,70 @@ button {
 
 <h1>Happy Birthday Prerna 🎂✨</h1>
 
-<button onclick="blow()">🎤 Blow Candle</button>
+<button onclick="startMic()">🎤 Blow The Candle</button>
+
+<div class="message" id="wishMessage">
+  🎉 Wish Made, Prerna 💖<br>
+  May your smile shine brighter than today ✨
+</div>
 
 <script>
-function blow() {
-    alert("🎉 Wish Made, Prerna 💖");
+let audioContext, analyser, microphone, dataArray;
+let blown = false;
+
+async function startMic() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+    microphone = audioContext.createMediaStreamSource(stream);
+
+    microphone.connect(analyser);
+    analyser.fftSize = 256;
+
+    const bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+
+    detectBlow();
+  } catch {
+    alert("Please allow microphone 🎤");
+  }
+}
+
+function detectBlow() {
+  if (blown) return;
+
+  analyser.getByteFrequencyData(dataArray);
+
+  let volume = 0;
+  for (let i = 0; i < dataArray.length; i++) {
+    volume += dataArray[i];
+  }
+  volume = volume / dataArray.length;
+
+  if (volume > 65) {
+    blown = true;
+    showWish();
+    createFireworks();
+  }
+
+  requestAnimationFrame(detectBlow);
+}
+
+function showWish() {
+  const msg = document.getElementById("wishMessage");
+  msg.style.opacity = 1;
+}
+
+function createFireworks() {
+  for (let i = 0; i < 20; i++) {
+    let firework = document.createElement("div");
+    firework.classList.add("firework");
+    firework.style.left = Math.random() * 100 + "vw";
+    firework.style.top = Math.random() * 60 + "vh";
+    document.body.appendChild(firework);
+    setTimeout(() => firework.remove(), 1000);
+  }
 }
 </script>
 
